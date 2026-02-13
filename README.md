@@ -1,3 +1,5 @@
+[![Project Tests](https://github.com/Twomac/HW5-NW/actions/workflows/ci.yml/badge.svg)](https://github.com/Twomac/HW5-NW/actions/workflows/ci.yml)
+
 # Project 5
 Needleman Wunsch Algorithm
 
