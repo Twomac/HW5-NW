@@ -10,7 +10,7 @@ pythonpath = [
 ]
 
 [project]
-name = "mst"
+name = "align"
 authors = [{name = "Taylor Womack", email = "Taylor.Womack@ucsf.edu"}]
 readme = "README.md"
 license = {file = "LICENSE"}
