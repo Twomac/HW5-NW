@@ -140,23 +140,25 @@ class NeedlemanWunsch:
         
         # TODO: Implement global alignment here
         '''
+        Note: 'A' and 'B' refer to the alignments that contain residues from seqA and seqB respectively and can 
+        contain gaps. 'seqA' and 'seqB' refer to the original sequences themselves and do not contain gaps.
+
         Here we implement the Gotoh (1982) algorithm which is actually a 3 matrix approach to optimizing the global 
         alignment between two sequences. It's helpful for affine gap penalties because it allows us to track 
         whether we are opening or extending gaps. _align_matrix is still the matrix of scores for optimal 
         alignments M[i,j] with i residues from seqA and j residues from seqB. _gapA_matrix on the other hand
-        stores the optimal scores for alignments between i and j (Q[i,j]) that END with a gap in seqA. _gapB_matcrix are
-        optimal scores for alignments that end with gaps in seqB (P[i,j]). Since we have 3 matrices of scores, we also
-        have 3 backtrace matrices because we will be hopping between all 3 matrices during our traceback.
-        When we are in _align_matrix (for instance at the beginning of the traceback when we start at M[len(a),len(B)]),
-        _back will tell us whether the alignment that we came from was the upper left diagonal in _align_matrix 
-        (sequence that ends in no gaps) with a value of 0, or to move to the sequence at the same indices in _gapA_matrix
-        (sequence that ends with gap in A at Q[i,j]) with a value of 1, or to move to the sequence at the same indices in
-        _gapB_matrix (sequence that ends with gap in B at P[i,j]). _back_A will take a value of 0 if we should move to 
-        the left column but back to _align_matrix and a value of 1 if we should stay in _gapA_matrix. Similar for _back_B
-        but moving to the upper row instead of left column.
+        stores the optimal scores for alignments between i and j (Q[i,j]) that END with a gap in A. _gapB_matrix are
+        optimal scores for alignments that end with gaps in B (P[i,j]). Since we have 3 matrices of scores, we also
+        have 3 traceback matrices which are able to hop between each other. When we are in _align_matrix (for instance at 
+        the beginning of the traceback when we start at M[len(a),len(B)]),
+        _back will take a value of 0 if our current alignment came from the upper left diagonal in _align_matrix 
+        (sequence that ends in no gaps), or a value of 1 if our current alignment came from the alignment at the same 
+        indices in _gapA_matrix (sequence that ends with gap in A at Q[i,j]), or a value of 2 if our current alignment 
+        came from the alignment at the same indices in _gapB_matrix (sequence that ends with gap in B at P[i,j]). 
+        _back_A will take a value of 0 if we should move back to _align_matrix and a value of 1 if we should stay in 
+        _gapA_matrix as we move to alignments in cells to the left of the current alignment. Similarly for _back_B but 
+        moving to the cell above instead of to the left.
         '''
-        # we begin with initializing the first row and column
-
         # upper left cell
         self._align_matrix[0,0] = 0 
         self._gapA_matrix[0,0] = -np.inf
@@ -169,7 +171,7 @@ class NeedlemanWunsch:
             self._gapB_matrix[0,j] = -np.inf  # impossible to end in a gap in B if we have not iterated over any residue from seqA
             self._back[0,j] = 1 # we should move to _gapA_matrix to find alignments ending with gaps in A
             self._back_A[0,j] = 1 # stay in _gapA_matrix since we have consumed all residues in seqA
-            self._back_B[0,j] = -1 # huh? we can't end in a gap in B if we are out of residues in seqA!
+            self._back_B[0,j] = -1 # huh? we can't have a gap in B if we are out of residues in seqA!
 
         # left column, pairing residues in seqA with gaps in B
         for i in range(1, len(seqA) + 1):
@@ -177,7 +179,7 @@ class NeedlemanWunsch:
             self._gapA_matrix[i,0] = float('-inf')
             self._gapB_matrix[i,0] = self.gap_open + (i-1)*self.gap_extend
             self._back[i,0] = 2 # we should move to _gapB_matrix to find alignments ending with gaps in B
-            self._back_A[i,0] = -1 # huh? we can't end in a gap in A if we are out of residues in seqB!
+            self._back_A[i,0] = -1 # huh? we can't have a gap in A if we are out of residues in seqB!
             self._back_B[i,0] = 1 # stay in _gapB_matrix since we have consumed all residues in seqB
 
         # fill out rest of matrices
@@ -250,7 +252,7 @@ class NeedlemanWunsch:
             elif ε == 'Q': # we are in _gapA_matrix
                 if self._back_A[i,j] == 0: # move to _align_matrix since that is where we came from when we opened the gap in A
                     ε = 'M'  # move back to _align_matrix
-                reverse_A_align += '_' # gap in A
+                reverse_A_align += '-' # gap in A
                 reverse_B_align += self._seqB[j-1]
                 j -= 1  # move left
             
@@ -258,7 +260,7 @@ class NeedlemanWunsch:
                 if self._back_B[i,j] == 0: # move to _align_matrix since that is where we came from when we opened the gap in B
                     ε = 'M'  # move back to _align_matrix
                 reverse_A_align += self._seqA[i-1]
-                reverse_B_align += '_' # gap in B
+                reverse_B_align += '-' # gap in B
                 i -= 1 # move up
 
         # reverse the alignments since we built them in reverse order

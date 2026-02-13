@@ -55,7 +55,7 @@ def test_nw_backtrace():
     
     # correct backtrace sequence is rather trivial, so I wrote it out by hand
     correct_seqA_align = "MAVHQLIRRP"
-    correct_seqB_align = "M___QLIRHP"
+    correct_seqB_align = "M---QLIRHP"
     correct_score = 18
 
     assert seqA_align == correct_seqA_align
